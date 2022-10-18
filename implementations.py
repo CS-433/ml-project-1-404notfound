@@ -1,8 +1,20 @@
 import numpy as np
 
 
-def compute_gradient(y, tx, w):
-    """Computes the gradient at w.
+def sigmoid(t):
+    """apply sigmoid function on t.
+
+    Args:
+        t: scalar or numpy array
+
+    Returns:
+        scalar or numpy array
+    """
+    return 1 / (1 + np.exp(-t))
+
+
+def linear_reg_gradient(y, tx, w):
+    """Computes the gradient of linear regression at w.
 
     Args:
         y: numpy array of shape=(N, 1)
@@ -22,8 +34,8 @@ def compute_gradient(y, tx, w):
     return grad.reshape(-1, 1)
 
 
-def compute_stoch_gradient(y, tx, w):
-    """Compute a stochastic gradient at w from just few examples n and their corresponding y_n labels.
+def logistic_reg_gradient(y, tx, w):
+    """Computes the gradient of logistic regression at w.
 
     Args:
         y: numpy array of shape=(N, 1)
@@ -31,20 +43,20 @@ def compute_stoch_gradient(y, tx, w):
         w: numpy array of shape=(D, 1). The vector of model parameters.
 
     Returns:
-        A numpy array of shape (D, 1) (same shape as w), containing the stochastic gradient of the loss at w.
+        An numpy array of shape (D, 1) (same shape as w), containing the gradient of the loss at w.
     """
 
     N = y.shape[0]
-    e = y - tx @ w
+    e = y - sigmoid(tx @ w)
 
-    # compute gradient vector
+    # compute gradient vector for MSE
     grad = -1 / N * tx.T @ e
 
     return grad.reshape(-1, 1)
 
 
-def compute_loss(y, tx, w):
-    """Calculate the loss using either MSE or MAE.
+def compute_mse(y, tx, w):
+    """Calculate the loss using MSE.
 
     Args:
         y: numpy array of shape=(N, 1)
@@ -60,7 +72,25 @@ def compute_loss(y, tx, w):
 
     loss = 1 / (2 * N) * e.T @ e
 
-    return np.float64(loss.item())
+    return np.float64(loss)
+
+
+def compute_ce(y, tx, w):
+    """Compute the cross-entropy loss.
+
+    Args:
+        y:  shape=(N, 1)
+        tx: shape=(N, D)
+        w:  shape=(D, 1)
+
+    Returns:
+        a non-negative loss
+    """
+
+    y_pred = sigmoid(tx @ w)
+    loss = -(y.T @ np.log(y_pred) + (1 - y).T @ np.log(1 - y_pred)) / y.shape[0]
+
+    return np.float64(loss)
 
 
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
@@ -106,20 +136,20 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
 
     # Define parameters to store w and loss
     w = initial_w
-    loss = compute_loss(y, tx, w)
+    loss = compute_mse(y, tx, w)
     ws = [initial_w]
     losses = [loss]
 
     for n_iter in range(max_iters):
 
         # compute gradient
-        grad = compute_gradient(y, tx, w)
+        grad = linear_reg_gradient(y, tx, w)
 
         # update w by gradient
         w = w - gamma * grad
 
         # compute loss
-        loss = compute_loss(y, tx, w)
+        loss = compute_mse(y, tx, w)
 
         # store w and loss
         ws.append(w)
@@ -145,7 +175,7 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
 
     # Define parameters to store w and loss
     w = initial_w
-    loss = compute_loss(y, tx, w)
+    loss = compute_mse(y, tx, w)
     ws = [initial_w]
     losses = [loss]
 
@@ -154,13 +184,13 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
         for y_batch, tx_batch in batch_iter(y, tx, batch_size=1, num_batches=1):
 
             # compute gradient
-            grad = compute_gradient(y, tx, w)
+            grad = linear_reg_gradient(y_batch, tx_batch, w)
 
             # update w by gradient
             w = w - gamma * grad
 
             # compute loss
-            loss = compute_loss(y, tx, w)
+            loss = compute_mse(y, tx, w)
 
             # store w and loss
             ws.append(w)
@@ -183,7 +213,7 @@ def least_squares(y, tx):
     a = tx.T.dot(tx)
     b = tx.T.dot(y)
     w = np.linalg.solve(a, b).reshape(-1, 1)
-    loss = compute_loss(y, tx, w)
+    loss = compute_mse(y, tx, w)
 
     return w, loss
 
@@ -202,18 +232,90 @@ def ridge_regression(y, tx, lambda_):
     N, D = tx.shape
     I = np.eye(D)
     w = np.linalg.solve(tx.T @ tx + 2 * N * lambda_ * I, tx.T @ y).reshape(-1, 1)
-    loss = compute_loss(y, tx, w)
+    loss = compute_mse(y, tx, w)
 
     return w, loss
 
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
-    """Logistic regression using gradient descent or SGD (y ∈ {0, 1})."""
-    pass
+    """Logistic regression using gradient descent or SGD (y ∈ {0, 1}).
+
+    Args:
+        y: numpy array of shape=(N, 1)
+        tx: numpy array of shape=(N, D)
+        initial_w: numpy array of shape=(D, 1). The initial guess (or the initialization) for the model parameters
+        max_iters: a scalar denoting the total number of iterations of SGD
+        gamma: a scalar denoting the stepsize
+
+    Returns:
+        w: the last weight vector of shape (D, 1)
+        loss: the corresponding mse loss
+    """
+
+    # Define parameters to store w and loss
+    w = initial_w
+    loss = compute_ce(y, tx, w)
+    ws = [initial_w]
+    losses = [loss]
+
+    for n_iter in range(max_iters):
+        for y_batch, tx_batch in batch_iter(
+            y, tx, batch_size=y.shape[0], num_batches=1
+        ):
+            # compute gradient
+            grad = logistic_reg_gradient(y_batch, tx_batch, w)
+
+            # update w by gradient
+            w = w - gamma * grad
+
+            # compute loss
+            loss = compute_ce(y, tx, w)
+
+            # store w and loss
+            ws.append(w)
+            losses.append(loss)
+
+    return ws[-1], losses[-1]
 
 
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     """Regularized logistic regression using gradient descent
     or SGD (y ∈ {0, 1}, with regularization term λ|w|2)
+
+    Args:
+        y: numpy array of shape=(N, 1)
+        tx: numpy array of shape=(N, D)
+        lambda_: a scalar denoting the regularization term
+        initial_w: numpy array of shape=(D, 1). The initial guess (or the initialization) for the model parameters
+        max_iters: a scalar denoting the total number of iterations of SGD
+        gamma: a scalar denoting the stepsize
+
+    Returns:
+        w: the last weight vector of shape (D, 1)
+        loss: the corresponding mse loss
     """
-    pass
+
+    # Define parameters to store w and loss
+    w = initial_w
+    loss = compute_ce(y, tx, w)
+    ws = [initial_w]
+    losses = [loss]
+
+    for n_iter in range(max_iters):
+        for y_batch, tx_batch in batch_iter(
+            y, tx, batch_size=y.shape[0], num_batches=1
+        ):
+            # compute gradient
+            grad = logistic_reg_gradient(y_batch, tx_batch, w)
+
+            # update w by gradient
+            w = w - gamma * (grad + 2 * lambda_ * w)
+
+            # compute loss
+            loss = compute_ce(y, tx, w)
+
+            # store w and loss
+            ws.append(w)
+            losses.append(loss)
+
+    return ws[-1], losses[-1]
