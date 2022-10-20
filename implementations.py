@@ -10,7 +10,7 @@ def sigmoid(t):
     Returns:
         scalar or numpy array
     """
-    return 1 / (1 + np.exp(-t))
+    return np.clip(1 / (1 + np.exp(-t)), 1e-6, 1-(1e-6))    # avoid 0 or 1
 
 
 def linear_reg_gradient(y, tx, w):
@@ -158,7 +158,7 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
     return ws[-1], losses[-1]
 
 
-def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
+def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma, batch_size=1):
     """Linear regression using stochastic gradient descent.
 
     Args:
@@ -167,6 +167,7 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
         initial_w: numpy array of shape=(D, 1). The initial guess (or the initialization) for the model parameters
         max_iters: a scalar denoting the total number of iterations of SGD
         gamma: a scalar denoting the stepsize
+        batch_size: default 1, a scalar denoting the batch size
 
     Returns:
         w: the last weight vector of shape (D, 1)
@@ -181,7 +182,7 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
 
     for n_iter in range(max_iters):
         # implement stochastic gradient descent.
-        for y_batch, tx_batch in batch_iter(y, tx, batch_size=1, num_batches=1):
+        for y_batch, tx_batch in batch_iter(y, tx, batch_size=batch_size, num_batches=1):
 
             # compute gradient
             grad = linear_reg_gradient(y_batch, tx_batch, w)
