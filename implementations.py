@@ -10,7 +10,8 @@ def sigmoid(t):
     Returns:
         scalar or numpy array
     """
-    return np.clip(1 / (1 + np.exp(-t)), 1e-6, 1-(1e-6))    # avoid 0 or 1
+    t = np.clip(t, -10, 10)     # avoid overflow
+    return 1 / (1 + np.exp(-t))
 
 
 def linear_reg_gradient(y, tx, w):
