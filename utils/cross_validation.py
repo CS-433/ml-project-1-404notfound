@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 def build_k_indices(y, k_fold, seed):
     """build k indices for k-fold.
-    
+
     Args:
         y:      shape=(N,)
         k_fold: K in K-fold, i.e. the fold num
@@ -17,7 +17,7 @@ def build_k_indices(y, k_fold, seed):
     interval = int(num_row / k_fold)
     np.random.seed(seed)
     indices = np.random.permutation(num_row)
-    k_indices = [indices[k * interval: (k + 1) * interval] for k in range(k_fold)]
+    k_indices = [indices[k * interval : (k + 1) * interval] for k in range(k_fold)]
     return np.array(k_indices)
 
 
@@ -42,7 +42,7 @@ def cross_validation_dataset(y, x, k_indices, k):
     # ***************************************************
 
     test_indice = k_indices[k]
-    train_indice = k_indices[~ (np.arange(k_indices.shape[0]) == k)]
+    train_indice = k_indices[~(np.arange(k_indices.shape[0]) == k)]
     train_indice = train_indice.reshape(-1)
     x_test = x[test_indice]
     y_test = y[test_indice]
@@ -61,12 +61,12 @@ def cross_validation_visualization(hyper_x, loss_train, loss_test, jet_num):
         jet_num:    scalar, pri_jet_num
     """
 
-    plt.semilogx(hyper_x, loss_train, marker=".", color='b', label='training loss')
-    plt.semilogx(hyper_x, loss_test, marker=".", color='r', label='testing loss')
+    plt.semilogx(hyper_x, loss_train, marker=".", color="b", label="training loss")
+    plt.semilogx(hyper_x, loss_test, marker=".", color="r", label="testing loss")
     plt.xlabel("lambda")
     plt.ylabel("loss")
     plt.title("cross validation for PRI_JET_NUM={}".format(jet_num))
     plt.legend(loc=2)
     plt.grid(True)
-    plt.savefig("cross_validation"+str(jet_num))
+    plt.savefig("cross_validation" + str(jet_num))
     plt.clf()

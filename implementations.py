@@ -10,7 +10,7 @@ def sigmoid(t):
     Returns:
         scalar or numpy array
     """
-    t = np.clip(t, -10, 10)     # avoid overflow
+    t = np.clip(t, -10, 10)  # avoid overflow
     return 1 / (1 + np.exp(-t))
 
 
@@ -183,7 +183,9 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma, batch_size=1):
 
     for n_iter in range(max_iters):
         # implement stochastic gradient descent.
-        for y_batch, tx_batch in batch_iter(y, tx, batch_size=batch_size, num_batches=1):
+        for y_batch, tx_batch in batch_iter(
+            y, tx, batch_size=batch_size, num_batches=1
+        ):
 
             # compute gradient
             grad = linear_reg_gradient(y_batch, tx_batch, w)
@@ -218,6 +220,27 @@ def least_squares(y, tx):
     loss = compute_mse(y, tx, w)
 
     return w, loss
+
+
+def least_square_cv(y_tr, tx_tr, y_dev, tx_dev):
+    """Ridge regression using normal equations.
+    Args:
+        y_tr: training label, numpy array of shape (N_tr, 1), N is the number of samples.
+        tx_tr: training data, numpy array of shape (N_tr, D), D is the number of features.
+        y_dev: validation label, numpy array of shape (N_dev, 1), N is the number of samples.
+        tx_dev: balidation data, numpy array of shape (N_dev, D), D is the number of features.
+
+    Returns:
+        w: optimal weights, numpy array of shape(D, 1), D is the number of features.
+        train_loss: scalar, training loss.
+        dev_loss: scalar, validation loss.
+    """
+    N, D = tx_tr.shape
+    w = np.linalg.solve(tx_tr.T @ tx_tr, tx_tr.T @ y_tr).reshape(-1, 1)
+    train_loss = compute_mse(y_tr, tx_tr, w)
+    dev_loss = compute_mse(y_dev, tx_dev, w)
+
+    return w, train_loss, dev_loss
 
 
 def ridge_regression(y, tx, lambda_):
