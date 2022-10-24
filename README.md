@@ -10,7 +10,7 @@ Code in Python using `numpy` **only**.
 - Naisong Zhou: naisong.zhou@epfl.ch
 - Yuheng Lu: yuheng.lu@epfl.ch
 
-## Aim :
+## Aim:
 The Higgs boson is an elementary particle in the Standard Model of physics which explains why other particles have mass. We are given a vector of features representing the decay signature of a collision event, and we want to predict whether this event was signal (a Higgs boson) or background (something else). To do this, we use different binary classification techniques and compare the results.
 
 ## Dataset:
