@@ -20,6 +20,7 @@ class Args(object):
             test_path: path for test data.
             submission_path: path for submission.
             degree: polynomial term.
+            lambda_: penalizing term.
             k_fold: we use 1/k_fold of the training data as the validation data.
             seed: random seed indicating the deadline of the project.
         """
@@ -27,6 +28,7 @@ class Args(object):
         self.test_path = "./data/test.csv"
         self.submission_path = "./data/submission_final.csv"
         self.degree = 9
+        self.lambda_ = 1e-8
         self.k_fold = 5
         self.seed = 20221031
 
@@ -54,6 +56,8 @@ if __name__ == "__main__":
         tx_te,
         maxs,
         mins,
+        means,
+        stds
     ) = feature_engineering(
         y_raw_tr, y_raw_dev, tx_raw_tr, tx_raw_dev, tx_raw_te, args.degree
     )
@@ -70,11 +74,12 @@ if __name__ == "__main__":
         y_dev = y_dev_list[i]
         tx_dev = tx_dev_list[i]
 
-        best_w, train_loss, dev_loss = least_square_cv(
+        best_w, train_loss, dev_loss = ridge_regression_cv(
             y_tr,
             tx_tr,
             y_dev,
             tx_dev,
+            args.lambda_
         )
 
         y_tr_pred = np.vstack((y_tr_pred, predict_linear(tx_tr, best_w)))
@@ -110,6 +115,9 @@ if __name__ == "__main__":
         else:
             tx_cleaned = tx_te[i, :-1].reshape(1, -1)
 
+        mean = means[pri_jet_num]
+        std = stds[pri_jet_num]
+        tx_cleaned = np.clip(tx_cleaned, mean-2*std, mean+2*std)
         tx_cleaned = build_poly(tx_cleaned, args.degree)
         tx = (
             (tx_cleaned - mins[pri_jet_num]) / (maxs[pri_jet_num] - mins[pri_jet_num])

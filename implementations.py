@@ -222,13 +222,14 @@ def least_squares(y, tx):
     return w, loss
 
 
-def least_square_cv(y_tr, tx_tr, y_dev, tx_dev):
+def ridge_regression_cv(y_tr, tx_tr, y_dev, tx_dev, lambda_):
     """Ridge regression using normal equations.
     Args:
         y_tr: training label, numpy array of shape (N_tr, 1), N is the number of samples.
         tx_tr: training data, numpy array of shape (N_tr, D), D is the number of features.
         y_dev: validation label, numpy array of shape (N_dev, 1), N is the number of samples.
         tx_dev: balidation data, numpy array of shape (N_dev, D), D is the number of features.
+        lambda_: scalar.
 
     Returns:
         w: optimal weights, numpy array of shape(D, 1), D is the number of features.
@@ -236,7 +237,8 @@ def least_square_cv(y_tr, tx_tr, y_dev, tx_dev):
         dev_loss: scalar, validation loss.
     """
     N, D = tx_tr.shape
-    w = np.linalg.solve(tx_tr.T @ tx_tr, tx_tr.T @ y_tr).reshape(-1, 1)
+    I = np.eye(D)
+    w = np.linalg.solve(tx_tr.T @ tx_tr + 2 * N * lambda_ * I, tx_tr.T @ y_tr).reshape(-1, 1)
     train_loss = compute_mse(y_tr, tx_tr, w)
     dev_loss = compute_mse(y_dev, tx_dev, w)
 

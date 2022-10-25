@@ -19,6 +19,8 @@ def feature_engineering(y_raw_tr, y_raw_dev, tx_raw_tr, tx_raw_dev, tx_raw_te, d
         tx_dev_list: list of validation data with different PRI_JET_NUM
         y_dev_list: list of label corresponding to tx_dev_list
         tx_te: processed test data
+        maxs: list of maxs of the processed training and validation data
+        mins: list of mins of the processed training and validation data
         means: list of means of the processed training and validation data
         stds: list of stds of the processed training and validation data
     """
@@ -27,17 +29,31 @@ def feature_engineering(y_raw_tr, y_raw_dev, tx_raw_tr, tx_raw_dev, tx_raw_te, d
     y_dev = process_y(y_raw_dev)
 
     # swap pri_jet_num to the last row
-    # and fill -999 in the first column with 60
-    # 60 is smaller than values in the first column but not very small
+    # and fill -999 in the first column with nanmedian
     tx_tr = process_tx(tx_raw_tr)
     tx_dev = process_tx(tx_raw_dev)
     tx_te = process_tx(tx_raw_te)
+    median = np.nanmedian(np.hstack((tx_tr[:, 0], tx_te[:, 0])))
+    tx_tr[np.isnan(tx_tr[:, 0]), 0] = median
+    tx_dev[np.isnan(tx_dev[:, 0]), 0] = median
+    tx_te[np.isnan(tx_te[:, 0]), 0] = median
 
     # split datasets to different jet nums
     # and remove columns with missing values for each jet num
     tx_tr_list, y_tr_list = split_jet_num(tx_tr, y_tr)
     tx_dev_list, y_dev_list = split_jet_num(tx_dev, y_dev)
     split_number = len(tx_tr_list)
+
+    # remove outliers
+    means = []
+    stds = []
+    for i in range(3):
+        mean = np.mean(np.vstack((tx_tr_list[i], tx_dev_list[i])), axis=0)
+        std = np.std(np.vstack((tx_tr_list[i], tx_dev_list[i])), axis=0)
+        tx_tr_list[i] = np.clip(tx_tr_list[i], mean-2*std, mean+2*std)
+        tx_dev_list[i] = np.clip(tx_dev_list[i], mean-2*std, mean+2*std)
+        means.append(mean)
+        stds.append(std)
 
     # add polynomial features
     for i in range(split_number):
@@ -52,7 +68,7 @@ def feature_engineering(y_raw_tr, y_raw_dev, tx_raw_tr, tx_raw_dev, tx_raw_te, d
             tx_tr_list[i], tx_dev_list[i]
         )
 
-    return tx_tr_list, y_tr_list, tx_dev_list, y_dev_list, tx_te, maxs, mins
+    return tx_tr_list, y_tr_list, tx_dev_list, y_dev_list, tx_te, maxs, mins, means, stds
 
 
 def process_y(y_raw):
@@ -79,7 +95,7 @@ def process_tx(tx_raw):
         tx_cleaned: numpy array of shape (N, D). D is the reduced dimension.
     """
     tx_raw[:, [22, 29]] = tx_raw[:, [29, 22]]
-    tx_raw[tx_raw[:, 0] == -999, 0] = 60
+    tx_raw[tx_raw[:, 0] == -999, 0] = np.nan
     tx_cleaned = tx_raw
 
     return tx_cleaned

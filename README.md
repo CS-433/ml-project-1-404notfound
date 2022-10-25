@@ -27,9 +27,9 @@ conda activate mlproject
 
 |               | Accuracy (%) | Precision (%) | Recall (%) | F1-score (%) |
 | ------------- | ------------ | ------------- | ---------- | ------------ |
-| Training      | 82.58        | 76.60         | 70.87      | 73.62        |
-| Validation    | 82.62        | 76.34         | 71.09      | 73.62        |
-| Test (AIcrowd) | 82.40        | -             | -          | 73.4         |
+| Training      | 83.07        | 77.89         | 70.73      | 74.13        |
+| Validation    | 83.00        | 77.38         | 70.88      | 73.99        |
+| Test (AIcrowd) | 83.00        | -             | -          | 74.10         |
 
 ## Files
 - `run.py` : produces nearly the same predictions (as a csv file) which we used in our best submission to the competition system.
