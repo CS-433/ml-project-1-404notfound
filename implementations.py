@@ -238,7 +238,9 @@ def ridge_regression_cv(y_tr, tx_tr, y_dev, tx_dev, lambda_):
     """
     N, D = tx_tr.shape
     I = np.eye(D)
-    w = np.linalg.solve(tx_tr.T @ tx_tr + 2 * N * lambda_ * I, tx_tr.T @ y_tr).reshape(-1, 1)
+    w = np.linalg.solve(tx_tr.T @ tx_tr + 2 * N * lambda_ * I, tx_tr.T @ y_tr).reshape(
+        -1, 1
+    )
     train_loss = compute_mse(y_tr, tx_tr, w)
     dev_loss = compute_mse(y_dev, tx_dev, w)
 

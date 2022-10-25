@@ -50,8 +50,8 @@ def feature_engineering(y_raw_tr, y_raw_dev, tx_raw_tr, tx_raw_dev, tx_raw_te, d
     for i in range(3):
         mean = np.mean(np.vstack((tx_tr_list[i], tx_dev_list[i])), axis=0)
         std = np.std(np.vstack((tx_tr_list[i], tx_dev_list[i])), axis=0)
-        tx_tr_list[i] = np.clip(tx_tr_list[i], mean-2*std, mean+2*std)
-        tx_dev_list[i] = np.clip(tx_dev_list[i], mean-2*std, mean+2*std)
+        tx_tr_list[i] = np.clip(tx_tr_list[i], mean - 2 * std, mean + 2 * std)
+        tx_dev_list[i] = np.clip(tx_dev_list[i], mean - 2 * std, mean + 2 * std)
         means.append(mean)
         stds.append(std)
 
@@ -68,7 +68,17 @@ def feature_engineering(y_raw_tr, y_raw_dev, tx_raw_tr, tx_raw_dev, tx_raw_te, d
             tx_tr_list[i], tx_dev_list[i]
         )
 
-    return tx_tr_list, y_tr_list, tx_dev_list, y_dev_list, tx_te, maxs, mins, means, stds
+    return (
+        tx_tr_list,
+        y_tr_list,
+        tx_dev_list,
+        y_dev_list,
+        tx_te,
+        maxs,
+        mins,
+        means,
+        stds,
+    )
 
 
 def process_y(y_raw):

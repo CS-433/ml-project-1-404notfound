@@ -57,7 +57,7 @@ if __name__ == "__main__":
         maxs,
         mins,
         means,
-        stds
+        stds,
     ) = feature_engineering(
         y_raw_tr, y_raw_dev, tx_raw_tr, tx_raw_dev, tx_raw_te, args.degree
     )
@@ -75,11 +75,7 @@ if __name__ == "__main__":
         tx_dev = tx_dev_list[i]
 
         best_w, train_loss, dev_loss = ridge_regression_cv(
-            y_tr,
-            tx_tr,
-            y_dev,
-            tx_dev,
-            args.lambda_
+            y_tr, tx_tr, y_dev, tx_dev, args.lambda_
         )
 
         y_tr_pred = np.vstack((y_tr_pred, predict_linear(tx_tr, best_w)))
@@ -117,7 +113,7 @@ if __name__ == "__main__":
 
         mean = means[pri_jet_num]
         std = stds[pri_jet_num]
-        tx_cleaned = np.clip(tx_cleaned, mean-2*std, mean+2*std)
+        tx_cleaned = np.clip(tx_cleaned, mean - 2 * std, mean + 2 * std)
         tx_cleaned = build_poly(tx_cleaned, args.degree)
         tx = (
             (tx_cleaned - mins[pri_jet_num]) / (maxs[pri_jet_num] - mins[pri_jet_num])
