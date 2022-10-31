@@ -55,6 +55,10 @@ def feature_engineering(y_raw_tr, y_raw_dev, tx_raw_tr, tx_raw_dev, tx_raw_te, d
         means.append(mean)
         stds.append(std)
 
+    # resampling
+    for i in range(3):
+        tx_tr_list[i], y_tr_list[i] = resample(tx_tr_list[i], y_tr_list[i], ifresample = True, redistribute = "over")
+
     # add polynomial features
     for i in range(split_number):
         tx_tr_list[i] = build_poly(tx_tr_list[i], degree)
@@ -238,3 +242,67 @@ def build_poly(tx, degree):
         poly = np.hstack((poly, tx ** (i + 1)))
 
     return poly
+
+
+def resample(X, Y, ifresample = False, redistribute = "False", noise = "False", *args):
+    """ Resampling data by Y labels.
+    
+        Args:
+        X: data,            np.array(shape = (N,D))
+        Y: 2-value labels,  np.array(shape = (N)) 
+        resample: bool
+        redistribute: (optional)
+            "False": resampled data have the same distribution with original data
+            "over":  oversample X with minor label to match with major label
+            "under": undersample X with majoy label to match size with minor label
+        noise:        (optional) 
+            "False": no adding noise to new X data
+            "Gaussian: add a tuned noise e~N(0,1)^, amplified by eta given in *args
+        args: optional parameters for noise
+            if Gaussian:  args[0] == noise_level, array of float, size D or 1
+
+        Return:
+        X_new, Y_new: np arrays of resampled data
+    """
+
+    N, D = X.shape
+    redis_param = ['False', 'over', 'under']
+    noise_param = ['False', 'Gaussian']
+    more = 1
+    assert redistribute in redis_param and noise in noise_param, \
+        "Illegal resampling argument error"
+
+    if ifresample==True:
+        if redistribute == "False":
+            idx = np.random.randint(0, N, size = more*N)
+            X_new = X[idx]
+            Y_new = Y[idx]
+        else:
+            y_values = np.unique(Y)
+            a_idxes = np.argwhere(Y==y_values[0]).flatten()
+            b_idxes = np.argwhere(Y==y_values[1]).flatten()
+            if (a_idxes.size < b_idxes.size):
+                a_idxes, b_idxes = b_idxes, a_idxes
+            if redistribute == "over":
+                sample_size = a_idxes.size
+            elif redistribute == "under":
+                sample_size = b_idxes.size
+        
+            idx_a = a_idxes[np.random.randint(0, a_idxes.size, sample_size*more),]
+            idx_b = b_idxes[np.random.randint(0, b_idxes.size, sample_size*more)]
+
+            X_new = np.concatenate((X[idx_a, :], X[idx_b,:]), axis = 0)
+            Y_new = np.concatenate((Y[idx_a], Y[idx_b]), axis = 0)
+    else: 
+        X_new, Y_new = X, Y
+
+    if noise == "False":
+        return X_new, Y_new
+    elif noise == "Gaussian":
+        noise_level = args[0]  
+        # print(len(noise_level))
+        assert (len(noise_level)==1 or len(noise_level)== D),\
+            "noise level dimention not match with X"
+        noise = np.random.normal(size=X_new.shape) * noise_level
+        X_new = np.einsum("ni, ni -> ni", X_new, noise)
+        return X_new, Y_new
