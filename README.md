@@ -10,8 +10,8 @@ Code in Python using `numpy` **only**.
 - Naisong Zhou: naisong.zhou@epfl.ch
 - Yuheng Lu: yuheng.lu@epfl.ch
 
-## Aim
-The Higgs boson is an elementary particle in the Standard Model of physics which explains why other particles have mass. We are given a vector of features representing the decay signature of a collision event, and we want to predict whether this event was signal (a Higgs boson) or background (something else). To do this, we use different binary classification techniques and compare the results.
+## Abstract
+Machine learning has gain more application as new models are proposed. In this project, we applied machine learning techniques on CERN’s Higgs Boson Dataset. With noise distributed in data, we took different pre-processing methods for better performance and compared several models on this task.
 
 ## Dataset
 Download dataset [here](https://www.aicrowd.com/challenges/epfl-machine-learning-higgs/dataset_files). Extract all files and move into a new folder named `data`. It cannot be uploaded because of its size.
